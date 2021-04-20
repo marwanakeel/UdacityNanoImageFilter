@@ -14,6 +14,8 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.use(bodyParser.json());
   
   app.get( "/filteredimage", async (req, res ) => {
+    var files_to_process:string[] = new Array(); 
+    try{
       let { image_url } = req.query;
       if ( !image_url ) {
         return res.status(400)
@@ -24,10 +26,13 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
         return res.status(422)
                   .send(`image_url is not a valid link`);
       }
-      var files_to_process:string[] = new Array(); 
       const filteredpath = await filterImageFromURL(image_url);
-      files_to_process.push(filteredpath);
+      files_to_process.push(filteredpath);      
       return res.status(200).on('close', function(){deleteLocalFiles(files_to_process)}).sendFile(filteredpath);
+    }
+    catch(err){
+      return res.status(500).on('close', function(){deleteLocalFiles(files_to_process)}).send({err, msg:"Error While Processing the image"});
+    }
     
   } );
   // Root Endpoint
